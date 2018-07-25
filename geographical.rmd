@@ -1,0 +1,136 @@
+---
+title: "Geographical Analysis"
+author: "LANG LI"
+date: "July 12, 2017"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DataComputing)
+NaloxoneGMN = read.csv("NaloxoneGMN.csv")
+Naloxonemetro = read.csv("Naloxonemetro.csv")
+drugODGMN = read.csv("drugODGMN.csv")
+drugODmetro = read.csv("drugODmetro.csv")
+Naloxone = read.csv("Naloxone.csv")
+NalDO = read.csv("NalDO.csv")
+NalNotDO = read.csv("NalNotDO.csv")
+drugoverdose = read.csv("drugoverdose.csv")
+overdoseCP = read.csv("overdoseCP.csv")
+noODCP = read.csv("noODCP.csv")
+NalDOGMN = read.csv("NalDOGMN.csv")
+NalDOmetro = read.csv("NalDOmetro.csv")
+EMSdata = read.csv("EMSdata.csv")
+```
+
+```{r}
+percentagePie = function(data,var,title){
+  alcdrug = as.data.frame(table(data[,var]))
+  lbls = alcdrug$Var1
+  slices = alcdrug$Freq
+  pct <- round(slices/sum(slices)*100)
+  lbls <- paste(lbls, pct) # add percents to labels 
+  lbls <- paste(lbls,"%",sep="") # ad % to labels 
+  pie(slices,col=rainbow(length(lbls)),
+  	main=title,labels = NA)
+  legend(.9,.9,lbls,cex = 0.5,fill =rainbow(length(lbls)))
+}
+```
+
+# 1. Consistency between home and incident address
+
+The first question we want to answer is whether people's home address are the same with people's incident address. We discuss the question based on zipcode:
+```{r}
+n  = 0
+for (i in 1:nrow(EMSdata)){
+  if (EMSdata$E8_15_IncidentZIP1[i] == EMSdata$E6_8_PatientHomeZIP1[i] & EMSdata$E8_15_IncidentZIP1[i] > 0){
+    n = n+1
+  }
+}
+n
+```
+
+So we found that within all the cases, there are 11016 cases where the incident zip and the home zip are the same. This indicates that 47% of people are not at their original "home".
+
+Then we want to know how many people are moving from out of state: So we found 2702 people in the list. So I know 1 of them are denoted as "Homeless and others are from out of state. Some exceptions includes invalid zipcode and missing value. So further test on missing value indicates that 2050 values are missing since after the test, only 652 people are left.
+
+## 2. ALS vs. BLS
+```{r}
+percentagePie(drugoverdose,34,"Pie Chart of Service level for drug overdose")
+percentagePie(Naloxone,34,"Pie Chart of Service level for Naloxone Administration")
+```
+14% of all drug overdose cases are handled by BLS while for all the naloxone administration, BLS only takes 5% of them. But at least, we still have BLS that can administer Naloxone.
+
+## 3. Urbanicity of incident address
+```{r}
+percentagePie(drugoverdose,36,"Pie Chart of Urbanicity level for drug overdose")
+percentagePie(Naloxone,36,"Pie Chart of Urbanicity level for Naloxone Administration")
+```
+So we can see a similar pattern for both drug overdose and Naloxone administration for different types of urbanicity. Most drug overdose cases are happened in urban area. Naloxone distribution is similar across different places with wilderness and rural and wilderness area are not covered that well compared with Urban area.
+
+## 4. Disposition
+
+```{r}
+percentagePie(drugoverdose,28,"Pie Chart of Patient disposition for drug OD patients")
+```
+
+So again, 93% of the drug OD patients are transferred to care or ER while 894 patients refused the care (4.6%) and 16 drug overdose patients died at the scene where 7 of them actually received Naloxone. 15 people are transferred by Law enforcement and they did not receive any Naloxone.
+
+```{r}
+percentagePie(Naloxone,28,"Pie Chart of Patient disposition for people receive Naloxone")
+```
+Most of the patient (95%) are transferred to ER or care. 93 of them dead at scene after they received Naloxone. Only 6 cases are treated and released and 3 cases are care refused.
+
+## 5. Destination location type
+
+```{r}
+percentagePie(drugoverdose,29,"Pie Chart of Destination Type for drug OD patients")
+percentagePie(Naloxone,29,"Pie Chart of Destination Type for people receive Naloxone")
+```
+So in both cases, patient given Naloxone ended up transporting to hospital or Clinic. For overall drug overdose cases where 4% patients are transferred to law enforcement and detox center. These people are not severely intoxication.
+
+## 6. Incident location type
+
+```{r}
+percentagePie(drugoverdose,19,"Pie Chart of Incident Type for drug OD patients")
+percentagePie(Naloxone,19,"Pie Chart of Incident Type for people receive Naloxone")
+```
+
+
+## 7. County level Analysis:
+```{r}
+percentagePie(drugODmetro,20
+              ,"Incident County of Metro for drug OD")
+```
+So 75% of the patient of drug overdose are from Hennipin county.... while other county are pretty equal in share. Anoka county has 9% and ramsay county only has 6%
+```{r}
+percentagePie(Naloxonemetro,20,"Incident County of Metro for Naloxone Administration")
+```
+
+However, things changed a lot here. Although Hennipin county are still the No.1 for administerintg Naloxone, we found that Ramsay county makes up 26% of the administrations, which is a lot compared with the 6% drug overdose.
+
+```{r}
+percentagePie(NalDOmetro,20,"Incident County of Metro for Naloxone Administration")
+```
+So again here, we can see that the distribution is similar to what we have for overall drug overdose. Which means that we have to doubt where Ramsay County EMS personnel used Nalaxone... It seems that they used a lot of Naloxone on non opioid overdose patients...
+
+```{r}
+table(drugODGMN$E8_13_IncidentCounty1)
+table(NaloxoneGMN$E8_13_IncidentCounty1)
+table(NalDOGMN$E8_13_IncidentCounty1)
+```
+So for drug overdose, Beltrami County and St Louis County has significantly more drug overdose than other counties (both > 300 cases). Similar size to scott county in the metro area. I think the reason behind that is the big city and ralative county size there (Duluth and Bemidji). However, in terms of Naloxone administration, we can only observe that St. Louis county are very active. However, some very intriguing note is that Benton county don't have any drug overdose cases but they have 31 administration of Naloxone.... Similar things happened with Blue earth county...
+
+## 8. Destination County information
+```{r}
+a = 0
+for (i in 1:nrow(drugoverdose)){
+  if (drugoverdose[i,20]==drugoverdose[i,31] & drugoverdose[i,31]>0){
+    a = a + 1
+  }
+}
+a
+```
+
+So 14417 patients are transfered to the facilities in the same county.So there are about 25% of patients are transferred to other counties. One thing we don't know is how the EMS Personnel recorded non-transfer and no load. This is a interesting question to know. So within the 25% of the data where patient are transferred to somewhere outside of the state, we cannot know how far they travelled (I know some cases where patients are transfered to nearby states like ND and Even CANADA!). 

@@ -1,0 +1,114 @@
+---
+title: "Demographic Analysis"
+author: "LANG LI"
+date: "July 6, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DataComputing)
+Naloxone = read.csv("Naloxone.csv")
+NalDO = read.csv("NalDO.csv")
+NalNotDO = read.csv("NalNotDO.csv")
+drugoverdose = read.csv("drugoverdose.csv")
+overdoseCP = read.csv("overdoseCP.csv")
+noODCP = read.csv("noODCP.csv")
+```
+## 1. Age Distribution
+```{r}
+age1 = subset(drugoverdose, drugoverdose$E6_14_Age1>0)
+hist(age1$E6_14_Age1,main="Age distribution of people with drug overdose",xlab = "Age")
+```
+So we can see from the histogram above that the most common age for drug overdose are 15-60 with peaks at 20-30 and 45-55 years old. If we look closely at those people who receive Naloxone:
+```{r}
+age2 = subset(Naloxone, Naloxone$E6_14_Age1>0)
+hist(age2$E6_14_Age1,main="Age distribution of people who received Naloxone",xlab = "Age")
+```
+The distribution is very similar with people aged from 20 to 30. Young people between 10 and 20 receive far less Naloxone than those older people...
+
+## 2. Ethnicity
+```{r}
+table(drugoverdose$E6_13_Ethnicity1)
+```
+
+So missing data, again is an issue. This field is optional, so it is understandable. I tend to believe that most of the patients are not latino...
+
+## 3. Race
+```{r}
+barplot(table(drugoverdose$E6_12_Race1), xlab = "race",ylab = "number of cases", main = "Race information about all drug overdose patients",cex.names = 0.65,las=1)
+```
+
+Besides around 200 missing data due to an optional field, we can see that most of the patients are white. Asian and native hawaiian are the rarest. black, American indian and other races are close to each other. (Q:What are other races may stand for?)
+```{r}
+barplot(table(Naloxone$E6_12_Race1), xlab = "race code",ylab = "number of cases", main = "Race information about patients received Naloxone",cex.names = 0.5,las=1)
+```
+From this barplot, we can see that there are higher proportions of patients that are black in the group that administer naloxone. Missing data is huge in this section.
+
+```{r}
+barplot(table(NalDO$E6_12_Race1), xlab = "race code",ylab = "number of cases", main = "Race information about drug overdose patients received Naloxone",cex.names = 0.5,las=1)
+```
+Similar distribution is shown for the Naloxone patient and drug overdose.
+
+```{r}
+barplot(table(NalNotDO$E6_12_Race1), xlab = "race code",ylab = "number of cases", main = "Race information about patients received Naloxone but not overdose coded",cex.names = 0.5,las=1)
+```
+When we look at the group of people who received Naloxone but did not have a code about drug overdose, we find that the number of black patients are significantly higher than usual... Missing data is also a huge problem here.
+
+```{r}
+barplot(table(overdoseCP$E6_12_Race1), xlab = "race code",ylab = "number of cases", main = "Race information about patients received Naloxone and complained about drug overdose but coded so",cex.names = 0.65,las=1)
+```
+
+## 4. Gender
+```{r}
+barplot(table(drugoverdose$E6_11_Gender1),xlab = "gender code",ylab =" cases",main = "gender distribution for all overdose patient")
+```
+So apparently, Male is much more than Female patients and we want to see other scenarios.
+```{r}
+barplot(table(Naloxone$E6_11_Gender1),xlab = "gender code",ylab =" cases",main = "gender distribution for Naloxone administrationed patients")
+```
+
+```{r}
+barplot(table(NalDO$E6_11_Gender1),xlab = "gender code",ylab =" cases",main = "gender distribution of drug overdose patient with Naloxone administrated")
+```
+
+```{r}
+barplot(table(NalNotDO$E6_11_Gender1),xlab = "gender code",ylab =" cases",main = "gender distribution of non-drug overdose patient with Naloxone administrationn")
+```
+
+```{r}
+barplot(table(overdoseCP$E6_11_Gender1),xlab = "gender code",ylab =" cases",main = "gender distribution of those patient with naloxone, chief complaint about drug overdose and no coding")
+```
+
+## 5. Age-Gender two way graph
+```{r}
+AG1 = table(drugoverdose$E6_11_Gender1,drugoverdose$E6_14_Age1)
+barplot(AG1,xlab="age",ylab = "Age-Gender distribution",col = c("blue","red","green"),legend= c("female","male","unknown"))
+```
+For Naloxone
+```{r}
+AG2 = table(Naloxone$E6_11_Gender1,Naloxone$E6_14_Age1)
+barplot(AG2,xlab="age",ylab = "Age-Gender distribution",col = c("blue","red","green"),legend= c("female","male","unknown"))
+```
+
+For Naloxone and Drug Overdose:
+```{r}
+AG3 = table(NalDO$E6_11_Gender1,NalDO$E6_14_Age1)
+barplot(AG3,xlab="age",ylab = "Age-Gender distribution",col = c("blue","red","green"),legend= c("female","male","unknown"))
+```
+
+Some findings: Naloxone are more likely to being administrated on younger people and people greater than 55 years old although the majority of the drug overdose patients falls between 20-60 years old with a peak at 45 years old.
+
+```{r}
+barplot(table(NalDO$E6_11_Gender1,NalDO$agegroup),col = c("Red","blue","yellow"),legend.text = c("female","male","unknown"),ylab = "counts",xlab = "age groups",cex.names = 0.4,las=1)
+```
+BEAUTIFUL PLOT FUNCTION
+```{r}
+plotData = function(data){
+  oddf = as.data.frame(table(data$E6_11_Gender1,data$agegroup))
+  colnames(oddf) = c("Gender","Agegroup","Freq")
+  oddf$Agegroup<-factor(oddf$Agegroup,levels = c("unknown","1-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80-84","85+"))
+  ggplot(oddf,aes(x=Agegroup,y=Freq ,fill=Gender))+geom_bar(stat='identity',position='dodge', width=.9) + theme(axis.text.x=element_text(angle=60,hjust=1))+labs( y = "Number of Cases")
+}
+```
+

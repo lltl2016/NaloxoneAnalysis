@@ -1,0 +1,63 @@
+---
+title: "Data Analysis 3"
+author: "Lang Li"
+date: "June 28, 2017"
+output: html_document
+---
+
+
+This file used to do some data cleaning:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Naloxone = read.csv("Naloxone.csv")
+NalDO = read.csv("NalDO.csv")
+NalNotDO = read.csv("NalNotDO.csv")
+drugoverdose = read.csv("drugoverdose.csv")
+overdoseCP = read.csv("overdoseCP.csv")
+noODCP = read.csv("noODCP.csv")
+```
+
+## 1. Number of times we administer naloxone for DO patients:
+```{r}
+barplot(table(Naloxone$NaloxoneUsed)/sum(Naloxone$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for all patients")
+barplot(table(NalDO$NaloxoneUsed)/sum(NalDO$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for Drug overdose patients")
+barplot(table(NalNotDO$NaloxoneUsed)/sum(NalNotDO$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for Non Drug overdose patients")
+prim = table(NalNotDO$E9_15_PrimaryImp1)
+barplot(prim,xlab = "Sympton numbers",ylab = "number of cases",main = "Primary impression of Non-drug overdose patient with Naloxone use")
+```
+
+From the first three plot, we can see that the dosages (number of time EMS personnel use Naloxone) have fairly similar distribution.
+
+## 2. Primary Impression and Secondary Impression
+So based on String matching, which is actually very exhausting.... we found that there are 130 cases there the chief complaint mentions "drug overdose". Now, we are investigating the code:
+```{r}
+barplot(table(overdoseCP$E9_15_PrimaryImp1),xlab = "Sympton numbers",ylab = "number of cases",main = "Primary impression of Patients with chief complaint of overdose")
+```
+
+So most likely, the code will be 1630 (altered level of Consciousness) and 1735 (Syncope/Fainting). 
+```{r}
+barplot(table(overdoseCP$E9_16_SecondaryImp1),xlab = "Sympton numbers",ylab = "number of cases",main = "Secondary impression of Patients with chief complaint of overdose")
+```
+
+So missing data for secondary impression still exists and the most secondary impressions are 1770 and 1870. So 1770 is "psychiatric disorder" while 1870 stands for "syncope / fainting".
+
+We may also see the Naloxone usage for these categories of patients
+```{r}
+barplot(table(overdoseCP$NaloxoneUsed)/sum(overdoseCP$NaloxoneUsed)*100,xlab = "Dosages",ylab = "Number of Cases",main = "Naloxone Dosage for suspected overdose patients")
+```
+
+
+## 3. Signs and Symptoms
+```{r}
+table(drugoverdose$E9_14_SignsSymptoms1)
+```
+
+From the table, we observed that most of the patients included in this dataset are recorded as "None". Few others mentions "change in responsiveness", "Mental/Psych", "pain" and "Weakness". Missing data and Non sympton are majority....
+
+## 4. Primary Organ affected
+```{r}
+table(drugoverdose$E9_12_PrimaryOrganSys1)
+```
+
+Here again, we have the most count as "Global pain or other illness" which fails to give useful information...

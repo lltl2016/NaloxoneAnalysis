@@ -1,0 +1,397 @@
+
+---
+title: "Medical Analysis"
+author: "Lang Li"
+date: "June 28, 2017"
+output: html_document
+---
+
+
+This file used to do some data cleaning:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Lang2 = read.csv("Lang-v-3.csv",stringsAsFactors = FALSE)
+EMS_provider_and_level = read.csv("EMS provider and level.csv")
+Lang2[is.na(Lang2)] <- -20
+Lang2[,61] = as.numeric(Lang2[,61])
+Lang2[,62] = as.numeric(Lang2[,62])
+Lang2[,63] = as.numeric(Lang2[,63])
+Lang2[,59]=as.POSIXct(Lang2[,59],format = "%m/%d/%Y %H:%M")
+Lang2[,59] = lubridate::as_datetime(Lang2[,59],tz = "America/Chicago")
+Lang2$E2_1_EMSAgencyNum1 = as.integer(Lang2$E2_1_EMSAgencyNum1)
+library(DataComputing)
+library(mosaic)
+```
+## 0. Code replacing for gender ,ethinicity age group and race.
+```{r, include=FALSE}
+for (i in 1:nrow(Lang2)){
+  if (Lang2[i,61]<0){
+    Lang2[i,61] = "Unknown"
+  }
+  if (Lang2[i,61] == 655){
+    Lang2[i,61] = "Female"
+  }
+  if (Lang2[i,61] == 650){
+    Lang2[i,61] = "Male"
+  }
+  if (Lang2[i,62]== 680){
+    Lang2[i,62] = "White"
+  }
+  if (Lang2[i,62]== 670){
+    Lang2[i,62] = "African American"
+  }
+  if (Lang2[i,62]== 660){
+    Lang2[i,62] = "American Indian"
+  }
+  if (Lang2[i,62]== 685){
+    Lang2[i,62] = "Other Races"
+  }
+  if (Lang2[i,62]== 675){
+    Lang2[i,62] = "Pacific Islander"
+  }
+  if (Lang2[i,62]== 665){
+    Lang2[i,62] = "Asian"
+  }
+  if (Lang2[i,63]== 690){
+    Lang2[i,63] = "Hispanic"
+  }
+  if (Lang2[i,63] == 695){
+    Lang2[i,63] = "Not Hispanic"
+  }
+  if (Lang2[i,62]<0){
+    Lang2[i,62] = "Unknown"
+  }
+  if (Lang2[i,63]<0){
+    Lang2[i,63] = "Unknown"
+  }
+}
+```
+
+```{r}
+agegroup = rep(0,nrow(Lang2))
+for (i in 1:nrow(Lang2)){
+  if (Lang2[i,65]< 0){
+    agegroup[i] = "unknown"
+  }
+  else if (Lang2[i,65]<1){
+    agegroup[i] = "< 1"
+  }
+  else if (Lang2[i,65]<5){
+    agegroup[i] = "1-4"
+  }
+  else if (Lang2[i,65]<10){
+    agegroup[i] = "5-9"
+  }
+  else if (Lang2[i,65]<15){
+    agegroup[i] = "10-14"
+  }
+  else if (Lang2[i,65]<20){
+    agegroup[i] = "15-19"
+  }
+  else if (Lang2[i,65]<25){
+    agegroup[i] = "20-24"
+  }
+  else if (Lang2[i,65]<30){
+    agegroup[i] = "25-29"
+  }
+  else if (Lang2[i,65]<35){
+    agegroup[i] = "30-34"
+  }
+  else if (Lang2[i,65]<40){
+    agegroup[i] = "35-39"
+  }
+  else if (Lang2[i,65]<45){
+    agegroup[i] = "40-44"
+  }
+  else if (Lang2[i,65]<50){
+    agegroup[i] = "45-49"
+  }
+  else if (Lang2[i,65]<55){
+    agegroup[i] = "50-54"
+  }
+  else if (Lang2[i,65]<60){
+    agegroup[i] = "55-59"
+  }
+  else if (Lang2[i,65]<65){
+    agegroup[i] = "60-64"
+  }
+  else if (Lang2[i,65]<70){
+    agegroup[i] = "65-69"
+  }
+  else if (Lang2[i,65]<75){
+    agegroup[i] = "70-74"
+  }
+  else if (Lang2[i,65]<80){
+    agegroup[i] = "75-79"
+  }
+  else if (Lang2[i,65]<85){
+    agegroup[i] = "80-84"
+  }
+  else{
+    agegroup[i] = "85+"
+  }
+}
+Lang2 = cbind(Lang2,agegroup)
+```
+
+```{r}
+for(i in 1:nrow(Lang2)){
+  if (Lang2$E12_19_AlcoholDrugUse1[i] == 2985){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Smell of Alcohol"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 2995){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Drug used"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 2990){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Alcohol used"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 3000){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Drug paraphernalia"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 3001){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "None"
+  }
+  else{
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Unknown"
+  }
+}
+```
+
+```{r}
+for (i in 1:nrow(Lang2)){
+  if (Lang2$E14_22_LevelofResponsiveness1[i] == 3255){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "alert"
+  }
+  else if (Lang2$E14_22_LevelofResponsiveness1[i] == 3260){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "verbal"
+  }
+  else if (Lang2$E14_22_LevelofResponsiveness1[i] == 3265){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "painful"
+  }
+  else if(Lang2$E14_22_LevelofResponsiveness1[i] == 3270){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "unresponsive"
+  }
+  else{
+    Lang2$E14_22_LevelofResponsiveness1[i] = "unknown"
+  }
+}
+```
+
+## 1. Determine Naloxone usage
+```{r}
+NaloxoneUsed = rep(0,nrow(Lang2))
+for (i in 1:nrow(Lang2)){
+  for (j in 2:17){
+    if (Lang2[i,j] == 'Naloxone (Narcan)'){
+      NaloxoneUsed[i] = NaloxoneUsed[i] + 1
+    }
+  }
+}
+Lang2 = cbind(Lang2,NaloxoneUsed)
+
+```
+
+
+## 2. Find duplicates
+```{r}
+lANG3 = Lang2[,2:66]
+dup = duplicated(lANG3)
+dupl = vector(mode = "numeric",length = 0)
+for (i in 1:length(dup)){
+  if (dup[i]==TRUE){
+    dupl = cbind(dupl,i)
+  }
+}
+Lang2 = Lang2[-dupl,]
+```
+
+
+## 4. Finding all drug overdose:
+```{r}
+drugoverdose = rbind(Lang2[Lang2[,51] == 1690,],Lang2[Lang2[,52] == 1825  & Lang2[,51] != 1690,])
+```
+
+## 5. Naloxone for or not for DO
+```{r}
+Naloxone = Lang2[Lang2$NaloxoneUsed > 0,]
+NalDO = matrix(nrow = 0, ncol = ncol(Naloxone))
+NalNotDO = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(Naloxone)){
+  if (Naloxone[i,51] == 1690){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if (Naloxone[i,52] == 1825){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else{
+    NalNotDO = rbind(NalNotDO,Naloxone[i,])
+  }
+}
+```
+
+## 6. Chief complaint:
+So we want to form a new group that includes people that are not coded by Drug overdose in primary and secondary impression but complained about drug overdose. So we did some basic language processing about chief naratives and here we go:
+```{r}
+NalNotDO = droplevels(NalNotDO)
+overdoseCP = matrix(nrow = 0, ncol = ncol(Naloxone))
+noODCP = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(NalNotDO)){
+  if (NalNotDO[i,50]=="drug overdose"|NalNotDO[i,50]=="Drug Overdose"|NalNotDO[i,50]=="heroine overdose" | NalNotDO[i,50]=="HEROIN OD" | NalNotDO[i,50]=="NO COMPLAINTS OVERDOSE"|NalNotDO[i,50]== "overdoes"|NalNotDO[i,50]=="overdose"|NalNotDO[i,50]=="Overdose"|NalNotDO[i,50]=="OVERDOSE"|NalNotDO[i,50]=="Overdose on Hydrocodone" | NalNotDO[i,50]=="overdose on medication" | NalNotDO[i,50]== "Poisoning/Overdose (unintentional)"|NalNotDO[i,50]=="PRESCRIPTION MEDICATION OVERDOSE" | NalNotDO[i,50]=="unresponsive/OD" |NalNotDO[i,50]=="unresponsive - possible overdose" | NalNotDO[i,50]=="unresponsive, unknown, poss. overdose" ){
+    overdoseCP = rbind(overdoseCP,NalNotDO[i,])
+  }else{
+    noODCP = rbind(noODCP,NalNotDO[i,])
+  }
+}
+write.csv(overdoseCP,"overdoseCP.csv")
+write.csv(noODCP,"NoODCP.csv")
+```
+
+
+
+## 1. Number of times we administer naloxone for DO patients:
+```{r}
+barplot(table(Naloxone$NaloxoneUsed)/sum(Naloxone$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for all patients")
+barplot(table(NalDO$NaloxoneUsed)/sum(NalDO$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for Drug overdose patients")
+barplot(table(NalNotDO$NaloxoneUsed)/sum(NalNotDO$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for Non Drug overdose patients")
+prim = table(NalNotDO$E9_15_PrimaryImp1)
+barplot(prim,xlab = "Sympton numbers",ylab = "number of cases",main = "Primary impression of Non-drug overdose patient with Naloxone use")
+```
+
+From the first three plot, we can see that the dosages (number of time EMS personnel use Naloxone) have fairly similar distribution.
+
+## 2. Primary Impression and Secondary Impression
+So based on String matching, which is actually very exhausting.... we found that there are 130 cases there the chief complaint mentions "drug overdose". Now, we are investigating the code:
+```{r}
+barplot(table(overdoseCP$E9_15_PrimaryImp1),xlab = "Sympton numbers",ylab = "number of cases",main = "Primary impression of Patients with chief complaint of overdose")
+```
+
+So most likely, the code will be 1630 (altered level of Consciousness) and 1735 (Syncope/Fainting). 
+```{r}
+barplot(table(overdoseCP$E9_16_SecondaryImp1),xlab = "Sympton numbers",ylab = "number of cases",main = "Secondary impression of Patients with chief complaint of overdose")
+```
+
+So missing data for secondary impression still exists and the most secondary impressions are 1770 and 1870. So 1770 is "psychiatric disorder" while 1870 stands for "syncope / fainting".
+
+We may also see the Naloxone usage for these categories of patients
+```{r}
+barplot(table(overdoseCP$NaloxoneUsed)/sum(overdoseCP$NaloxoneUsed)*100,xlab = "Dosages",ylab = "Number of Cases",main = "Naloxone Dosage for suspected overdose patients")
+```
+
+
+## 3. Signs and Symptoms
+```{r}
+table(drugoverdose$E9_14_SignsSymptoms1)
+```
+
+From the table, we observed that most of the patients included in this dataset are recorded as "None". Few others mentions "change in responsiveness", "Mental/Psych", "pain" and "Weakness". Missing data and Non sympton are majority....
+
+## 4. Primary Organ affected
+```{r}
+table(drugoverdose$E9_12_PrimaryOrganSys1)
+```
+
+Here again, we have the most count as "Global pain or other illness" which fails to give useful information...
+
+
+## 5. Reason per dispatch
+
+We want to investigate on the reason for dispatch
+```{r}
+table(drugoverdose$E3_1_ReasonPerDispatch1)
+```
+
+So from the result, we can see the data quality for this field is much better than other ones. However, most of of the case (4831) of then are "Unknown problem" which indicates nothing. 1868 of all cases are denoted as Unconscious and fainting. Some big ones are transfer, which does not provide useful informations, Psychiatric problem and ingestion and poisoning.
+
+When we look into Naloxone administration, we can see that most of the problem are "psychiatric", "unconsicous/fainting" and "poisoning".
+
+When we look into Naloxone administration for non drug overdose patients, 
+```{r}
+table(NalNotDO$E3_1_ReasonPerDispatch1)
+```
+
+Most people suffer frp, unconsciousness/fainting and poisoning but here are still 169 cases where dispatch reason is unknown.
+
+## 6. Med route
+We try to see within all the Naloxone administration, what are the route of Naloxone administration
+```{r}
+NaloxoneRoute = vector(mode="numeric", length=0)
+for (i in 1:nrow(Naloxone)){
+  for (j in 2:17){
+    if (Naloxone[i,j] == 'Naloxone (Narcan)'){
+      NaloxoneRoute = cbind(NaloxoneRoute,Naloxone[i,j+16])
+    }
+  }
+}
+table(NaloxoneRoute)
+```
+So there are a lot of missing data. The most common way of Naloxone administration route is 4205: Intravenous.
+
+## 7. Complications
+THIS IS A FUNCTION THAT SUMMARIZE THE COMPLICATION OF USING NALOXONE given a date set
+```{r}
+complication <- function(data){
+  Complications = vector(mode="numeric", length=0)
+  for (i in 1:nrow(data)){
+    for (j in 2:17){
+      if (data[i,j] == 'Naloxone (Narcan)'){
+      Complications = cbind(Complications,data[i,j+32])
+      }
+    }
+  }
+  return(Complications)
+}
+
+table(complication(Naloxone))
+table(complication(NalDO))
+
+```
+MISSING DATA IS A HUGE PROBLEM HERE as we found that there are equal number of none complications vs. missing data.... After all, complication seems rare among all. There are ver few cases with withdrawl effect.
+
+
+## 8. Response to Medication Analysis
+
+Too many missing data...
+
+## 9. Alcohol Drug use analysis
+
+```{r}
+percentagePie = function(data,var,title){
+  alcdrug = as.data.frame(table(data[,var]))
+  lbls = alcdrug$Var1
+  slices = alcdrug$Freq
+  pct <- round(slices/sum(slices)*100)
+  lbls <- paste(lbls, pct) # add percents to labels 
+  lbls <- paste(lbls,"%",sep="") # ad % to labels 
+  pie(slices,labels = lbls, col=rainbow(length(lbls)),
+  	main=title)
+}
+percentagePie(Naloxone,70,"Pie Chart of Alcohol or drug usage")
+```
+When we plot the pie graph with percentage for drug overdose and alcohol use, one thing we really worry about is that 51% of patient have alcohol involve while 17 - 18% of patients actually use Drug or admit use drug. We don't know if both drug and alcohol are being used. We cannot tell it from the data.
+
+
+
+## 10. Glasgow coma score
+```{r}
+hist(drugoverdose$E14_19_TotalGlasgowComaScale1[drugoverdose$E14_19_TotalGlasgowComaScale1>0],xlim = c(0,15),xlab = "Glasgow Coma Score",main = "GCS of suspected drug OD patients")
+```
+
+```{r}
+hist(Naloxone$E14_19_TotalGlasgowComaScale1[Naloxone$E14_19_TotalGlasgowComaScale1>0],xlim = c(0,15),xlab = "Glasgow Coma Score",main = "GCS of patients received naloxone")
+```
+
+So for the overall population of patient received Naloxone is those with very low Gcs. However, the overall population of all drug overdose patient have very high GCS which indicates that EMS personnel may be more willing to give out Naloxone to people will lower consciousness. In fact, EXACTLY half of the patients with drug overdose with a GCS OF 3 received Naloxone. 
+
+## 11. Level of responsiveness
+
+```{r}
+percentagePie(drugoverdose,72,"Pie Chart of level of responsiveness for drug OD Patient")
+percentagePie(Naloxone,72,"Pie Chart of level of responsiveness for patients received Naloxone")
+```
+
+## 12. Barrier of Medical Care
+```{r}
+table(drugoverdose$E12_1_BarrierstoPatientCare1)
+```
+
+Missing data and None are dominating the list and the most problem hindering the medical care is Physically restrained and physically impaired.

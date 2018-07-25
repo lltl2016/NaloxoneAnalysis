@@ -1,0 +1,385 @@
+---
+title: "Data Cleaning"
+author: "LANG LI"
+date: "July 6, 2017"
+output: html_document
+---
+
+This file used to do some data cleaning:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Lang2 = read.csv("Lang-v-3.csv",stringsAsFactors = FALSE)
+EMS_provider_and_level = read.csv("EMS provider and level.csv")
+Lang2[is.na(Lang2)] <- -20
+Lang2[,61] = as.numeric(Lang2[,61])
+Lang2[,62] = as.numeric(Lang2[,62])
+Lang2[,63] = as.numeric(Lang2[,63])
+Lang2[,59]=as.POSIXct(Lang2[,59],format = "%m/%d/%Y %H:%M")
+Lang2[,59] = lubridate::as_datetime(Lang2[,59],tz = "America/Chicago")
+Lang2$E2_1_EMSAgencyNum1 = as.integer(Lang2$E2_1_EMSAgencyNum1)
+library(DataComputing)
+library(gmapsdistance)
+```
+## 0. Code replacing for gender ,ethinicity age group and race.
+```{r, include=FALSE}
+for (i in 1:nrow(Lang2)){
+  if (Lang2[i,61]<0){
+    Lang2[i,61] = "Unknown"
+  }
+  if (Lang2[i,61] == 655){
+    Lang2[i,61] = "Female"
+  }
+  if (Lang2[i,61] == 650){
+    Lang2[i,61] = "Male"
+  }
+  if (Lang2[i,62]== 680){
+    Lang2[i,62] = "White"
+  }
+  if (Lang2[i,62]== 670){
+    Lang2[i,62] = "African American"
+  }
+  if (Lang2[i,62]== 660){
+    Lang2[i,62] = "American Indian"
+  }
+  if (Lang2[i,62]== 685){
+    Lang2[i,62] = "Other Races"
+  }
+  if (Lang2[i,62]== 675){
+    Lang2[i,62] = "Pacific Islander"
+  }
+  if (Lang2[i,62]== 665){
+    Lang2[i,62] = "Asian"
+  }
+  if (Lang2[i,63]== 690){
+    Lang2[i,63] = "Hispanic"
+  }
+  if (Lang2[i,63] == 695){
+    Lang2[i,63] = "Not Hispanic"
+  }
+  if (Lang2[i,62]<0){
+    Lang2[i,62] = "Unknown"
+  }
+  if (Lang2[i,63]<0){
+    Lang2[i,63] = "Unknown"
+  }
+}
+```
+
+```{r}
+agegroup = rep(0,nrow(Lang2))
+for (i in 1:nrow(Lang2)){
+  if (Lang2[i,65]< 0){
+    agegroup[i] = "unknown"
+  }
+  else if (Lang2[i,65]<1){
+    agegroup[i] = "< 1"
+  }
+  else if (Lang2[i,65]<5){
+    agegroup[i] = "1-4"
+  }
+  else if (Lang2[i,65]<10){
+    agegroup[i] = "5-9"
+  }
+  else if (Lang2[i,65]<15){
+    agegroup[i] = "10-14"
+  }
+  else if (Lang2[i,65]<20){
+    agegroup[i] = "15-19"
+  }
+  else if (Lang2[i,65]<25){
+    agegroup[i] = "20-24"
+  }
+  else if (Lang2[i,65]<30){
+    agegroup[i] = "25-29"
+  }
+  else if (Lang2[i,65]<35){
+    agegroup[i] = "30-34"
+  }
+  else if (Lang2[i,65]<40){
+    agegroup[i] = "35-39"
+  }
+  else if (Lang2[i,65]<45){
+    agegroup[i] = "40-44"
+  }
+  else if (Lang2[i,65]<50){
+    agegroup[i] = "45-49"
+  }
+  else if (Lang2[i,65]<55){
+    agegroup[i] = "50-54"
+  }
+  else if (Lang2[i,65]<60){
+    agegroup[i] = "55-59"
+  }
+  else if (Lang2[i,65]<65){
+    agegroup[i] = "60-64"
+  }
+  else if (Lang2[i,65]<70){
+    agegroup[i] = "65-69"
+  }
+  else if (Lang2[i,65]<75){
+    agegroup[i] = "70-74"
+  }
+  else if (Lang2[i,65]<80){
+    agegroup[i] = "75-79"
+  }
+  else if (Lang2[i,65]<85){
+    agegroup[i] = "80-84"
+  }
+  else{
+    agegroup[i] = "85+"
+  }
+}
+Lang2 = cbind(Lang2,agegroup)
+```
+
+```{r}
+for(i in 1:nrow(Lang2)){
+  if (Lang2$E12_19_AlcoholDrugUse1[i] == 2985){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Smell of Alcohol"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 2995){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Drug used"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 2990){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Alcohol used"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 3000){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Drug paraphernalia"
+  }
+  else if (Lang2$E12_19_AlcoholDrugUse1[i] == 3001){
+    Lang2$E12_19_AlcoholDrugUse1[i] = "None"
+  }
+  else{
+    Lang2$E12_19_AlcoholDrugUse1[i] = "Unknown"
+  }
+}
+```
+
+```{r}
+for (i in 1:nrow(Lang2)){
+  if (Lang2$E14_22_LevelofResponsiveness1[i] == 3255){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "alert"
+  }
+  else if (Lang2$E14_22_LevelofResponsiveness1[i] == 3260){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "verbal"
+  }
+  else if (Lang2$E14_22_LevelofResponsiveness1[i] == 3265){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "painful"
+  }
+  else if(Lang2$E14_22_LevelofResponsiveness1[i] == 3270){
+    Lang2$E14_22_LevelofResponsiveness1[i] = "unresponsive"
+  }
+  else{
+    Lang2$E14_22_LevelofResponsiveness1[i] = "unknown"
+  }
+}
+```
+
+```{r}
+for (i in 1:nrow(Lang2)){
+  if(Lang2$E20_10_PatientDisposition1[i] < 0){
+    Lang2$E20_10_PatientDisposition1[i] = "Unknown"
+  }
+  else if(Lang2$E20_10_PatientDisposition1[i] == 4815){
+    Lang2$E20_10_PatientDisposition1[i] = "Cancelled"
+  }
+  else if(Lang2$E20_10_PatientDisposition1[i] == 4820){
+    Lang2$E20_10_PatientDisposition1[i] = "Patient Died"
+  }
+  else if(Lang2$E20_10_PatientDisposition1[i] == 4825){
+    Lang2$E20_10_PatientDisposition1[i] = "No patient found"
+  }
+  else if(Lang2$E20_10_PatientDisposition1[i] == 4830){
+    Lang2$E20_10_PatientDisposition1[i] = "No treatment required"
+  }
+  else if(Lang2$E20_10_PatientDisposition1[i] == 4835){
+    Lang2$E20_10_PatientDisposition1[i] = "Patient refused care"
+  }
+  else if(Lang2$E20_10_PatientDisposition1[i] == 4840){
+    Lang2$E20_10_PatientDisposition1[i] = "Treated and Released"
+  }
+  else{
+    Lang2$E20_10_PatientDisposition1[i] = "Treated and Transported"
+  }
+}
+```
+
+```{r}
+for (i in 1:nrow(Lang2)){
+  if(Lang2$E20_17_DestinationType1[i] < 0){
+    Lang2$E20_17_DestinationType1[i] = "Unknown"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7270){
+    Lang2$E20_17_DestinationType1[i] = "Home"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7280){
+    Lang2$E20_17_DestinationType1[i] = "Hospital"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7290){
+    Lang2$E20_17_DestinationType1[i] = "Clinic"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7300){
+    Lang2$E20_17_DestinationType1[i] = "Morgue"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7320){
+    Lang2$E20_17_DestinationType1[i] = "Nursing Home"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7360){
+    Lang2$E20_17_DestinationType1[i] = "Police/Jail"
+  }
+  else if(Lang2$E20_17_DestinationType1[i] == 7370){
+    Lang2$E20_17_DestinationType1[i] = "Detox Center"
+  }
+  else{
+    Lang2$E20_17_DestinationType1[i] = "Other"
+  }
+}
+```
+
+```{r}
+for (i in 1:nrow(Lang2)){
+  if (Lang2$E8_7_IncidentLocationType1[i] < 0){
+    Lang2$E8_7_IncidentLocationType1[i] = "Unknown"
+  }
+  else if (Lang2$E8_7_IncidentLocationType1[i] == 1135){
+    Lang2$E8_7_IncidentLocationType1[i] = "Home"
+  }
+  else if (Lang2$E8_7_IncidentLocationType1[i] == 1140 | Lang2$E8_7_IncidentLocationType1[i] == 1145 |Lang2$E8_7_IncidentLocationType1[i] == 1150 |Lang2$E8_7_IncidentLocationType1[i] == 1165){
+    Lang2$E8_7_IncidentLocationType1[i] = "Working place"
+  }
+  else if (Lang2$E8_7_IncidentLocationType1[i] == 1155 | Lang2$E8_7_IncidentLocationType1[i] == 1170 | Lang2$E8_7_IncidentLocationType1[i] == 1185 ){
+    Lang2$E8_7_IncidentLocationType1[i] = "Recreational Place"
+  }
+  else if (Lang2$E8_7_IncidentLocationType1[i] == 1160){
+    Lang2$E8_7_IncidentLocationType1[i] = "Street"
+  }
+  else if (Lang2$E8_7_IncidentLocationType1[i] == 1175 | Lang2$E8_7_IncidentLocationType1[i] == 1180 | Lang2$E8_7_IncidentLocationType1[i] == 11751){
+    Lang2$E8_7_IncidentLocationType1[i] = "Health/Law Enforcement"
+  }
+  else{
+    Lang2$E8_7_IncidentLocationType1[i] = "Other"
+  }
+}
+```
+
+
+## 1. Determine Naloxone usage
+```{r}
+NaloxoneUsed = rep(0,nrow(Lang2))
+for (i in 1:nrow(Lang2)){
+  for (j in 2:17){
+    if (Lang2[i,j] == 'Naloxone (Narcan)'){
+      NaloxoneUsed[i] = NaloxoneUsed[i] + 1
+    }
+  }
+}
+Lang2 = cbind(Lang2,NaloxoneUsed)
+
+```
+
+
+
+## 2. Find duplicates
+```{r}
+lANG3 = Lang2[,2:66]
+dup = duplicated(lANG3)
+dupl = vector(mode = "numeric",length = 0)
+for (i in 1:length(dup)){
+  if (dup[i]==TRUE){
+    dupl = cbind(dupl,i)
+  }
+}
+Lang2 = Lang2[-dupl,]
+```
+
+## 3. Dimension Reduction and left join
+```{r}
+Lang2 = Lang2 %>% left_join(EMS_provider_and_level)
+Lang2 = Lang2 %>% left_join(RUCAMN
+                            )
+EMSdata = Lang2[,-(2:49)]
+write.csv(EMSdata,"EMSdata.csv")
+```
+
+## 4. Finding all drug overdose:
+```{r}
+drugoverdose = rbind(EMSdata[EMSdata[,3] == 1690,],EMSdata[EMSdata[,4] == 1825  & EMSdata[,3] != 1690,])
+write.csv(drugoverdose,"drugoverdose.csv")
+```
+
+## 5. Naloxone for or not for DO
+```{r}
+Naloxone = EMSdata[EMSdata$NaloxoneUsed > 0, ]
+NalDO = matrix(nrow = 0, ncol = ncol(Naloxone))
+NalNotDO = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(Naloxone)){
+  if (Naloxone[i,3] == 1690){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if (Naloxone[i,4] == 1825){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else{
+    NalNotDO = rbind(NalNotDO,Naloxone[i,])
+  }
+}
+write.csv(NalDO,"nalDO.csv")
+write.csv(NalNotDO,"nalNotDO.csv")
+write.csv(Naloxone,"Naloxone.csv")
+```
+
+## 6. Chief complaint:
+So we want to form a new group that includes people that are not coded by Drug overdose in primary and secondary impression but complained about drug overdose. So we did some basic language processing about chief naratives and here we go:
+```{r}
+NalNotDO = droplevels(NalNotDO)
+overdoseCP = matrix(nrow = 0, ncol = ncol(Naloxone))
+noODCP = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(NalNotDO)){
+  if (NalNotDO[i,2]=="drug overdose"|NalNotDO[i,2]=="Drug Overdose"|NalNotDO[i,2]=="heroine overdose" | NalNotDO[i,2]=="HEROIN OD" | NalNotDO[i,2]=="NO COMPLAINTS OVERDOSE"|NalNotDO[i,2]== "overdoes"|NalNotDO[i,2]=="overdose"|NalNotDO[i,2]=="Overdose"|NalNotDO[i,2]=="OVERDOSE"|NalNotDO[i,2]=="Overdose on Hydrocodone" | NalNotDO[i,2]=="overdose on medication" | NalNotDO[i,2]== "Poisoning/Overdose (unintentional)"|NalNotDO[i,2]=="PRESCRIPTION MEDICATION OVERDOSE" | NalNotDO[i,2]=="unresponsive/OD" |NalNotDO[i,2]=="unresponsive - possible overdose" | NalNotDO[i,2]=="unresponsive, unknown, poss. overdose" ){
+    overdoseCP = rbind(overdoseCP,NalNotDO[i,])
+  }else{
+    noODCP = rbind(noODCP,NalNotDO[i,])
+  }
+}
+write.csv(overdoseCP,"overdoseCP.csv")
+write.csv(noODCP,"NoODCP.csv")
+```
+ 
+## 7. Seven County metro and Greater MN 
+```{r}
+drugODmetro = matrix(nrow = 0, ncol = ncol(Naloxone))
+drugODGMN = matrix(nrow = 0, ncol = ncol(Naloxone))
+NaloxoneGMN = matrix(nrow = 0, ncol = ncol(Naloxone))
+Naloxonemetro = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(Naloxone)){
+  if (Naloxone$E8_13_IncidentCounty1[i] == 27053 | Naloxone$E8_13_IncidentCounty1[i] == 27123 | Naloxone$E8_13_IncidentCounty1[i] == 27003 | Naloxone$E8_13_IncidentCounty1[i] == 27163 | Naloxone$E8_13_IncidentCounty1[i] == 27037 | Naloxone$E8_13_IncidentCounty1[i] == 27139 | Naloxone$E8_13_IncidentCounty1[i] == 27019){
+    Naloxonemetro = rbind(Naloxonemetro,Naloxone[i,])
+  }else{
+    NaloxoneGMN = rbind(NaloxoneGMN,Naloxone[i,])
+  }
+}
+write.csv(Naloxonemetro,"Naloxonemetro.csv")
+write.csv(NaloxoneGMN,"NaloxoneGMN.csv")
+for (i in 1:nrow(drugoverdose)){
+  if (drugoverdose$E8_13_IncidentCounty1[i] == 27053 | drugoverdose$E8_13_IncidentCounty1[i] == 27123 | drugoverdose$E8_13_IncidentCounty1[i] == 27003 | drugoverdose$E8_13_IncidentCounty1[i] == 27163 | drugoverdose$E8_13_IncidentCounty1[i] == 27037 | drugoverdose$E8_13_IncidentCounty1[i] == 27139 | drugoverdose$E8_13_IncidentCounty1[i] == 27019){
+    drugODmetro = rbind(drugODmetro,drugoverdose[i,])
+  }else{
+    drugODGMN = rbind(drugODGMN,drugoverdose[i,])
+  }
+}
+write.csv(drugODGMN,"drugODGMN.csv")
+write.csv(drugODmetro,"drugODmetro.csv")
+
+NalDOGMN = matrix(nrow = 0, ncol = ncol(Naloxone))
+NalDOmetro = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(NalDO)){
+  if (NalDO$E8_13_IncidentCounty1[i] == 27053 | NalDO$E8_13_IncidentCounty1[i] == 27123 | NalDO$E8_13_IncidentCounty1[i] == 27003 | NalDO$E8_13_IncidentCounty1[i] == 27163 | NalDO$E8_13_IncidentCounty1[i] == 27037 | NalDO$E8_13_IncidentCounty1[i] == 27139 | NalDO$E8_13_IncidentCounty1[i] == 27019){
+    NalDOmetro = rbind(NalDOmetro,NalDO[i,])
+  }else{
+    NalDOGMN = rbind(NalDOGMN,NalDO[i,])
+  }
+}
+write.csv(NalDOmetro,"NalDOmetro.csv")
+write.csv(NalDOGMN,"NalDOGMN.csv")
+```

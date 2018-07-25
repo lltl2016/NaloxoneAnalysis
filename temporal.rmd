@@ -1,0 +1,93 @@
+---
+title: "Temporal Analysis"
+author: "LANG LI"
+date: "July 10, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DataComputing)
+library(lubridate)
+Naloxone = read.csv("Naloxone.csv")
+NalDO = read.csv("NalDO.csv")
+NalNotDO = read.csv("NalNotDO.csv")
+drugoverdose = read.csv("drugoverdose.csv")
+overdoseCP = read.csv("overdoseCP.csv")
+noODCP = read.csv("noODCP.csv")
+```
+
+Temporal Analysis:
+```{r}
+month= as.data.frame(table(month(drugoverdose$E5_1_IncidentDateTime1)))
+plot(month$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Month of the year",xlim = c(1,12),main = "Number of suspected drug OD by month")
+axis(1,at=1:12,labels =  c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"),cex.axis = 0.75)
+```
+
+```{r}
+month2= as.data.frame(table(month(Naloxone$E5_1_IncidentDateTime1)))
+plot(month2$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Month of the year",xlim = c(1,12),main = "Number of Naloxone Used by month")
+axis(1,at=1:12,labels =  c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"),cex.axis = 0.75)
+```
+
+```{r}
+month3= as.data.frame(table(month(NalDO$E5_1_IncidentDateTime1)))
+plot(month3$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Month of the year",xlim = c(1,12),main = "Number of Suspected opioid OD by month")
+axis(1,at=1:12,labels =  c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"),cex.axis = 0.75)
+```
+
+
+```{r}
+hour= as.data.frame(table(hour(drugoverdose$E5_1_IncidentDateTime1)))
+plot(hour$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Hour of the day",xlim = c(1,24),main = "Number of suspected drug OD by month")
+axis(1,at=1:24,labels = 1:24,cex.axis = 0.5)
+```
+```{r}
+hour2= as.data.frame(table(hour(Naloxone$E5_1_IncidentDateTime1)))
+plot(hour2$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Hour of the day",xlim = c(1,24),main = "Number of Naloxone Used in a day")
+axis(1,at=1:24,labels = 1:24,cex.axis = 0.5)
+```
+
+```{r}
+hour3= as.data.frame(table(hour(NalDO$E5_1_IncidentDateTime1)))
+plot(hour3$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Hour of the day",xlim = c(1,24),main = "Number of suspected opioid OD in a day")
+axis(1,at=1:24,labels = 1:24,cex.axis = 0.5)
+```
+
+
+```{r}
+wday= as.data.frame(table(wday(drugoverdose$E5_1_IncidentDateTime1,label = TRUE)))
+plot(wday$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Day of the week",xlim = c(1,7),main = "Number of suspected drug OD in a week")
+axis(1,at=1:7,labels = wday$Var1,cex.axis = 0.75)
+```
+
+```{r}
+wday2= as.data.frame(table(wday(Naloxone$E5_1_IncidentDateTime1,label = TRUE)))
+plot(wday2$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Day of the week",xlim = c(1,7),main = "Number of Naloxone Used by week")
+axis(1,at=1:7,labels = wday$Var1,cex.axis = 0.75)
+```
+
+```{r}
+wday3= as.data.frame(table(wday(NalDO$E5_1_IncidentDateTime1,label = TRUE)))
+plot(wday3$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Day of the week",xlim = c(1,7),main = "Number of suspected opioid OD by week")
+axis(1,at=1:7,labels = wday$Var1,cex.axis = 0.75)
+```
+
+
+```{r}
+day= as.data.frame(table(day(drugoverdose$E5_1_IncidentDateTime1)))
+plot(day$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Date of the month",xlim = c(1,31),main = "Number of suspected drug OD by date of month")
+axis(1,at=1:31,labels = 1:31,cex.axis = 0.75)
+```
+
+```{r}
+day2= as.data.frame(table(day(Naloxone$E5_1_IncidentDateTime1)))
+plot(day2$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Date of the month",xlim = c(1,31),main = "Number of Naloxone Used by date of month")
+axis(1,at=1:31,labels = 1:31,cex.axis = 0.75)
+```
+
+```{r}
+day3= as.data.frame(table(day(NalDO$E5_1_IncidentDateTime1)))
+plot(day3$Freq,xaxt = "n",type = "o",ylab = "Number of Cases",xlab = "Date of the month",xlim = c(1,31),main = "Number of suspected opioid OD by date of month")
+axis(1,at=1:31,labels = 1:31,cex.axis = 0.75)
+```

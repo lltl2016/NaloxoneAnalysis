@@ -1,0 +1,52 @@
+---
+title: "Demographic2"
+author: "LANG LI"
+date: "July 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+NaloxoneGMN = read.csv("NaloxoneGMN.csv")
+Naloxonemetro = read.csv("Naloxonemetro.csv")
+drugODGMN = read.csv("drugODGMN.csv")
+drugODmetro = read.csv("drugODmetro.csv")
+Naloxone = read.csv("Naloxone.csv")
+NalDO = read.csv("NalDO.csv")
+NalNotDO = read.csv("NalNotDO.csv")
+drugoverdose = read.csv("drugoverdose.csv")
+overdoseCP = read.csv("overdoseCP.csv")
+noODCP = read.csv("noODCP.csv")
+NalDOGMN = read.csv("NalDOGMN.csv")
+NalDOmetro = read.csv("NalDOmetro.csv")
+library(DataComputing)
+library(gridExtra)
+```
+
+```{r,include=FALSE}
+plotData = function(data){
+  oddf = as.data.frame(table(data$E6_11_Gender1,data$agegroup)/nrow(data))
+  colnames(oddf) = c("Gender","Agegroup","Freq")
+  oddf = oddf[oddf[,1] != "Unknown",]
+  oddf$Agegroup<-factor(oddf$Agegroup,levels = c("unknown","1-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80-84","85+"))
+  ggplot(oddf,aes(x=Agegroup,y=Freq ,fill=Gender))+geom_bar(stat='identity',position='dodge', width=.9) + theme(axis.text.x=element_text(angle=60,hjust=1))+labs( y = "Number of Cases")+ scale_y_continuous(labels = scales::percent,limits = c(0,0.1)) 
+}
+```
+
+Some beautiful plots
+```{r}
+plotData(Naloxone)
+plotData(NaloxoneGMN) 
+plotData(Naloxonemetro) 
+
+plotData(drugoverdose)
+plotData(drugODGMN) 
+plotData(drugODmetro)
+
+plotData(NalDO)
+plotData(NalDOGMN) 
+plotData(NalDOmetro) 
+```
+
+
+

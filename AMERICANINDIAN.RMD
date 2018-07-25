@@ -1,0 +1,70 @@
+---
+title: "Ame Ind"
+author: "LANG LI"
+date: "July 28, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(DataComputing)
+EMSdata = read.csv("EMSdata.csv")
+AI = subset(EMSdata,EMSdata$E6_12_Race1 == "American Indian")
+AIN = subset(AI,AI$Naloxone>0)
+```
+
+```{r,include=FALSE}
+percentagePie = function(data,var,title){
+  alcdrug = as.data.frame(table(data[,var]))
+  lbls = alcdrug$Var1
+  slices = alcdrug$Freq
+  pct <- round(slices/sum(slices)*100)
+  lbls <- paste(lbls, pct) # add percents to labels 
+  lbls <- paste(lbls,"%",sep="") # ad % to labels 
+  pie(slices,col=rainbow(length(lbls)),
+  	main=title,labels = NA)
+  legend(.9,.9,lbls,cex = 0.5,fill =rainbow(length(lbls)))
+}
+```
+
+```{r,include=FALSE}
+plotData = function(data){
+  oddf = as.data.frame(table(data$E6_11_Gender1,data$agegroup))
+  colnames(oddf) = c("Gender","Agegroup","Freq")
+  oddf$Agegroup<-factor(oddf$Agegroup,levels = c("unknown","1-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80-84","85+"))
+  ggplot(oddf,aes(x=Agegroup,y=Freq ,fill=Gender))+geom_bar(stat='identity',position='dodge', width=.9) + theme(axis.text.x=element_text(angle=60,hjust=1))+labs( y = "Number of Cases")
+}
+```
+## 1. Who (American Indian) 
+
+Among the 2380 cases we have for American Indian patients. only 92 people received Naloxone
+
+## 2. Where
+
+```{r}
+percentagePie(AI,36,"Pie Chart of the Urbanicity of American Indian patient")
+```
+
+66% of the patients were from Urban area while there are 24% from wilderness area. I think this has something to do with the accessibility of naloxone in wilderness area. 1435 counts (60.3%) were from Hennepin County, 312 counts were from Beltrami County (13.1%), 110 cases were from Cass county(4.6%) and Mille Lacs County has about 4%.
+
+```{r}
+percentagePie(AIN,36,"Pie Chart of the Urbanicity of American Indian patient")
+```
+
+## 3. Naloxone administration
+
+1930 cases list drug overdose as primary symptom and 424 cases list drug overdose as secondary symptons. 26 cases did not involve any drug overdose symptons.
+
+Looking at all chief complaints, there are 130 ETOH OR ALCOHOL overdose. 
+256 case where total glasgow coma score <10, and 65 cases (25.4) where Naloxone is given.  18 of them have GCS <10. 59.3% of chief complaint is missing...
+
+## 4. Demographics
+```{r}
+plotData(AI)
+```
+Most of the patients are male, bimodal distribution with peaks at 30-34 and  at 45-54. Female are relatively constant with a peak at 45-49. when we look at the naloxone administration data...
+```{r}
+plotData(AIN)
+```
+
+The distribution is stunning different. Administration is preferred on young people and much more female get administered...

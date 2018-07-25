@@ -1,0 +1,220 @@
+---
+title: "Data analysis 2"
+author: "Lang Li"
+date: "June 21, 2017"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Lang = read.csv("Lang.csv")
+```
+
+## Cleaning the impressions
+The data for primary and secondary impression are hard to interpret, so I will clean them first:
+```{r}
+Lang[is.na(Lang)] <- -20
+for (i in 1:nrow(Lang)){
+  if(Lang[i,52] < 0 & Lang[i,53] > 0){
+    Lang[i,52] = Lang[i,53]
+    Lang[i,53] = -25
+  }
+  if(Lang[i,52] < 0 & Lang[i,53] < 0 & Lang[i,54] > 0){
+    Lang[i,52] = Lang[i,54]
+    Lang[i,54] = -25
+  }
+  if(Lang[i,52] < 0 & Lang[i,53] < 0 & Lang[i,54] < 0 & Lang[i,55] > 0){
+    Lang[i,52] = Lang[i,55]
+    Lang[i,55] = -25
+  }
+  if(Lang[i,54] < 0 & Lang[i,55] > 0){
+    Lang[i,54] = Lang[i,55]
+    Lang[i,55] = -25
+  }
+  if(Lang[i,54] < 0 & Lang[i,53] > 0){
+    Lang[i,54] = Lang[i,53]
+    Lang[i,53] = -25
+  }
+}
+```
+
+## Determine Naloxone use
+```{r}
+NaloxoneUsed = rep(0,nrow(Lang))
+for (i in 1:nrow(Lang)){
+  for (j in 2:17){
+    if (Lang[i,j] == 'Naloxone (Narcan)'){
+      NaloxoneUsed[i] = NaloxoneUsed[i] + 1
+    }
+  }
+}
+Lang = cbind(Lang,NaloxoneUsed)
+```
+
+## Naloxone usage
+```{r}
+table(NaloxoneUsed)
+```
+Above is a table with 
+## Find drug overdose:
+```{r}
+drugoverdose = rbind(Lang[Lang[,52] == 1690,],Lang[Lang[,52] == 1825,],Lang[Lang[,53] == 1690,],Lang[Lang[,54] == 1825  & Lang[,52] != 1690  & Lang[,53] != 1690 ,],Lang[Lang[,54] == 1690,],Lang[Lang[,55] == 1825 & Lang[,52] != 1690 & Lang[,53] != 1690 & Lang[,54] != 1690,])
+nrow(drugoverdose)
+nrow(drugoverdose[drugoverdose$NaloxoneUsed > 0,])
+```
+20262 cases of drug overdose and only 957 patients receive Naloxone. 
+
+
+## Naloxone for or not for DO
+```{r}
+Naloxone = Lang[Lang[,56] > 0, ]
+NalDO = matrix(nrow = 0, ncol = ncol(Naloxone))
+NalNotDO = matrix(nrow = 0, ncol = ncol(Naloxone))
+for (i in 1:nrow(Naloxone)){
+  if (Naloxone[i,52] == 1690){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if (Naloxone[i,52] == 1825){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if (Naloxone[i,53] == 1690){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if (Naloxone[i,54] == 1690){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if(Naloxone[i,54] == 1825){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else if (Naloxone[i,55] == 1825){
+    NalDO = rbind(NalDO,Naloxone[i,])
+  }
+  else{
+    NalNotDO = rbind(NalNotDO,Naloxone[i,])
+  }
+}
+
+
+```
+
+## Number of times we administer naloxone for DO patients:
+```{r}
+table(NalDO$NaloxoneUsed)
+barplot(table(NalDO$NaloxoneUsed)/sum(NalDO$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for Drug overdose patients")
+prim = table(NalNotDO$E9_15_PrimaryImp1)
+barplot(prim,xlab = "Sympton numbers",ylab = "number of cases",main = "Primary impression of Non-drug overdose patient with Naloxone use")
+table(NalNotDO$NaloxoneUsed)/sum(NalNotDO$NaloxoneUsed)*100
+barplot(table(NalNotDO$NaloxoneUsed)/sum(NalNotDO$NaloxoneUsed)*100,xlab = "Naloxone dosages",ylab = "percentage",main = "Naloxone usage for Non Drug overdose patients")
+```
+
+## Med route
+We try to see within all the Naloxone administration, what are the route of Naloxone administration
+```{r}
+NaloxoneRoute = vector(mode="numeric", length=0)
+for (i in 1:nrow(Naloxone)){
+  for (j in 2:17){
+    if (Naloxone[i,j] == 'Naloxone (Narcan)'){
+      NaloxoneRoute = cbind(NaloxoneRoute,Naloxone[i,j+16])
+    }
+  }
+}
+table(NaloxoneRoute)
+```
+So there are a lot of missing data. The most common way of Naloxone administration route is 4205: Intravenous.
+
+## Complications
+THIS IS A FUNCTION THAT SUMMARIZE THE COMPLICATION OF USING NALOXONE given a date set
+```{r}
+complication <- function(data){
+  Complications = vector(mode="numeric", length=0)
+  for (i in 1:nrow(data)){
+    for (j in 2:17){
+      if (data[i,j] == 'Naloxone (Narcan)'){
+      Complications = cbind(Complications,data[i,j+32])
+      }
+    }
+  }
+  return(Complications)
+}
+
+table(complication(Naloxone))
+table(complication(NalDO))
+
+```
+MISSING DATA IS A HUGE PROBLEM HERE as we found that there are equal number of none complications vs. missing data.... After all, complication seems rare among all. There are ver few cases with withdrawl effect.
+
+## prim/sec Impression Overlap
+
+There are instances where the EMS personel chooses drug overdose for both primary (1690) and secondary impressions(1825). (There are also cases where the primary/secondary impression1 and primary/secondary impression 2 are the same thing...)
+```{r}
+overlap = function(data){
+  overlap = 0
+  for(i in 1:nrow(data)){
+    if (data[i,52] == 1690 & data[i,54] == 1825){
+      overlap = overlap + 1
+    }
+  }
+  return(overlap)
+}
+
+overlap(Naloxone)
+
+```
+So overall, there are 6806 cases where this phenomena happened and 353 cases had naloxone administered. 
+
+## Not drug overdose at all
+```{r}
+notDOPI = matrix(nrow = 0,ncol = 56)
+for(i in 1:nrow(Lang)){
+  if(Lang[i,52] != 1690){
+    if (Lang[i,52] != 1825){
+      if (Lang[i,53] != 1690){
+        if (Lang[i,54]!=1690){
+          if (Lang[i,54]!= 1825){
+            if (Lang[i,55]!= 1825){
+              notDOPI = rbind(notDOPI,Lang[i,])
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+So these are the cases where neither primary nor secondary impressions are drug overdose and they all use NALOXONE.It is the same dataset with NalNotdo. So now the research focus would shift to this dataset. We want to see the indicator of these dataset: what drives EMS personnel to give Naloxone to these people. 
+
+## Chief complaints
+So obsversing the chief complaints of these data, most of them are "Altered LOC, cARDIAC aRREST, unconscious". There are several cases of drug overdose, overdose, poisoning, intoxication etc and they are being coded as mostly 1630 and 1735.
+
+There are also several cases where Alcohol intoxication patients are being administered Naloxone. 
+
+```{r}
+overdoseCP = matrix(nrow = 0, ncol=56)
+noODCP = matrix(nrow = 0, ncol=56)
+for (i in 1:nrow(NalNotDO)){
+  if (NalNotDO[i,50]=="drug overdose"|NalNotDO[i,50]=="Drug Overdose"|NalNotDO[i,50]=="heroine overdose" | NalNotDO[i,50]=="HEROIN OD" | NalNotDO[i,50]=="NO COMPLAINTS OVERDOSE"|NalNotDO[i,50]== "overdoes"|NalNotDO[i,50]=="overdose"|NalNotDO[i,50]=="Overdose"|NalNotDO[i,50]=="OVERDOSE"|NalNotDO[i,50]=="Overdose on Hydrocodone" | NalNotDO[i,50]=="overdose on medication" | NalNotDO[i,50]== "Poisoning/Overdose (unintentional)"|NalNotDO[i,50]=="PRESCRIPTION MEDICATION OVERDOSE"){
+    overdoseCP = rbind(overdoseCP,NalNotDO[i,])
+  }else{
+    noODCP = rbind(noODCP,NalNotDO[i,])
+  }
+}
+```
+
+So based on String matching, which is actually very exhausting.... we found that there are 130 cases there the chief complaint mentions "drug overdose". Now, we are investigating the code:
+```{r}
+barplot(table(overdoseCP$E9_15_PrimaryImp1),xlab = "Sympton numbers",ylab = "number of cases",main = "Primary impression of Patients with chief complaint of overdose")
+```
+
+So most likely, the code will be 1630 and 1735. 
+```{r}
+barplot(table(overdoseCP$E9_16_SecondaryImp1),xlab = "Sympton numbers",ylab = "number of cases",main = "Secondary impression of Patients with chief complaint of overdose")
+```
+So missing data for secondary impression still exists and the most secondary impressions are 1770 and 1870. So 1630 is "alter level of consciousness", 1770 is "psychiatric disorder" while the rest two codes both stand for "syncope / fainting"."
+
+We may also see the Naloxone usage for these categories of patients
+```{r}
+barplot(table(overdoseCP$NaloxoneUsed),xlab = "Dosages",ylab = "Number of Cases",main = "Naloxone Dosage for suspected overdose patients")
+```
+
